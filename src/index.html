@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>jQuery UI Draggable - Default functionality</title>
+<link rel="stylesheet" href="./jquery-ui/jquery-ui.min.css">
+<script src="./jquery-ui/external/jquery/jquery.js"></script>
+<script src="./jquery-ui/jquery-ui.min.js"></script>
+<script src="./lib/underscore-min.js"></script>
+<!-- <link rel="stylesheet" href="/resources/demos/style.css"> -->
+<style>
+.draggable {
+	width: 150px;
+	height: 150px;
+	padding: 0.5em;
+}
+
+div.myitem.ui-selected {
+	border: 2px solid orange;
+}
+</style>
+<script>
+	var counter = 1;
+
+	function printProperties(obj) {
+		var properties = '';
+		for ( var prop in obj) {
+			properties += prop + "=" + obj[prop] + "\n";
+		}
+		return properties;
+	}
+
+	function clickItem(event) {
+		var $obj = $('#' + this.id);
+		if (event.ctrlKey) {
+			$obj.toggleClass('ui-selected');
+		} else {
+			var sel = $obj.hasClass('ui-selected');
+			$('.ui-selected').removeClass('ui-selected');
+			if (!sel) {
+				$obj.addClass('ui-selected');
+			}
+		}
+	};
+
+	$(function() {
+		$("#contents").selectable({
+			selected : function(e, ui) {
+				console.log("selected:" + this.id);
+				//console.log("selected:" + $(ui.selected).attr('id'));
+				//var file = $(ui.selected);
+				//file.draggable('enable');
+			},
+			unselected : function(e, ui) {
+				console.log("unselected:" + ui.selected.id);
+				//var file = $(ui.selected);
+				//file.draggable('disable');
+			}
+		});
+		$("#add").click(function() {
+			counter = counter + 1;
+			var $new = $("<div class='ui-widget-content draggable'></div>");
+			$new.attr('id', 'item_' + counter);
+			$new.addClass('ui-selectee');
+			$new.addClass('myitem');
+			$new.text('item_' + counter);
+			$new.draggable({
+				start : function(e, ui) {
+					console.log("start");
+					var helper = ui.helper.get(0);
+					helper.selectedItems = $('.ui-selected');
+					helper.selectedItems.each(function() {
+						// ドラッグ要素の場合（idが定義されている）のみ座標を保持する（子要素に対しては座標保持を行わない）
+						if (this.id) {
+							this.startTop = parseInt($(this).css('top'));
+							this.startLeft = parseInt($(this).css('left'));
+							console.log("start  " + this.id + "," + this.startTop + "," + this.startLeft);
+						}
+					})
+				},
+				end : function(e, ui) {
+					console.log("end");
+					var helper = ui.helper.get(0);
+					helper.selectedItems = null;
+
+				},
+				drag : function(e, ui) {
+					var helper = ui.helper.get(0);
+					var topDistance = ui.position.top - helper.startTop;
+					var leftDistance = ui.position.left - helper.startLeft;
+					var selected = $(this).hasClass("ui-selected");
+					if (selected) {
+						helper.selectedItems.each(function() {
+							var newTop = this.startTop + topDistance;
+							var newLeft = this.startLeft + leftDistance;
+							$(this).css('top', newTop + 'px').css('left', newLeft + 'px');
+						});
+					}
+				}
+			});
+			$new.css('position', 'absolute');
+			$new.resizable();
+
+			$new.click(clickItem);
+			$("#contents").append($new);
+		});
+		$("#item_01").draggable();
+		$("#item_01").resizable();
+	});
+</script>
+</head>
+<body>
+	<div id="controls">
+		<button id="add">要素の追加</button>
+	</div>
+
+	<div id="contents" style="position: absolute;height:500px;width:1000px;background-color:#ffc"></div>
+
+</body>
+</html>
